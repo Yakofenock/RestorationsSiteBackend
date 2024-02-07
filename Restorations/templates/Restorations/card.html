@@ -1,0 +1,103 @@
+{% extends 'Restorations/base.html' %}
+{% load static %}
+{% load display_big_int %} <!-- Should be as filtertag.py name -->
+
+{% block body %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'Restorations:info' %}">Главная</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <a href="{% url 'Restorations:catalog' %}">Каталог</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">{{restoration.name}}</li>
+    </ol>
+</nav>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-10 col-lg-9 ">
+            <div class="detail-description">
+                <h2>{{ restoration.name }}</h2>
+                <img class="img-fluid mt-3 mb-3" src="{{ restoration.image }}" alt="">
+                <div class="description-text">
+                    <h4 class="mt-3">Описание</h4>
+                    <p>{{ restoration.description }}</p>
+                </div>
+                <h4 class="d-flex justify-content-between mt-3">
+                    Собрано: {{ restoration.percent }}%,
+                    {{ restoration.given_sum|display_int }} /
+                    {{ restoration.total_sum|display_int }}
+                    {{ money_symbhol }}
+                    <a class="btn btn-primary" href="{% url 'Restorations:catalog' %}">Назад</a>
+                </h4>
+            </div>
+            <div class="table-responsive mt-4">
+                <table class="table table-bordered">
+                    <thead class="main-color text-white">
+                    <tr>
+                        <th>Название работы</th>
+                        <th>Собрано, ₽</th>
+                        <th>Требуется, ₽</th>
+                        <th class="text-center">Доля, %</th>
+                        <th class="text-center">Статус</th>
+                        <th class="text-center">Пожертвовать</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for work in restoration.works %}
+                    <tr>
+                        <td>{{work.name}}</td>
+                        <td>{{work.given_sum|display_int}}</td>
+                        <td>{{work.total_sum|display_int}}</td>
+                        <td class="text-center">{{work.percent}}</td>
+                        <td class="text-center">{{work.status}}</td>
+                        <td class="text-center">
+                            <button class="btn btn-success">Да</button>
+                        </td>
+                    </tr>
+                    {%endfor%}
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-responsive mt-4">
+                <table class="table table-bordered">
+                    <thead class="main-color text-white">
+                    <tr>
+                        <th class="text-center">Имя</th>
+                        <th>Работа</th>
+                        <th>Донат, ₽</th>
+                        <th class="text-center">Доля, %</th>
+                        <th class="text-center">Всего доля, ₽</th>
+                        <th class="text-center">Всего, %</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for donor, data in donors.items %}
+                        {% for work in data.works %}
+                            <tr>
+                                {% if forloop.first %}
+                                    <td class="text-center" rowspan="{{ work|length }}">{{ donor }}</td>
+                                {% endif %}
+                                <td >{{ work.work }}</td>
+                                <td>{{ work.given_sum|display_int }}</td>
+                                <td>{{ work.percent }}</td>
+                                {% if forloop.first %}
+                                    <td class="text-center" rowspan="{{ work|length }}">
+                                        {{ data.total_sum|display_int }}
+                                    </td>
+                                    <td class="text-center" rowspan="{{ work|length }}">
+                                        {{ data.percent_of_total }}
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
