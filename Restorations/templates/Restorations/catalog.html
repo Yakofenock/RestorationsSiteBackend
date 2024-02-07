@@ -1,0 +1,36 @@
+{% extends 'Restorations/base.html' %}
+{% load static %}
+{% load display_big_int %}  <!-- Should be same as filtertag.py name -->
+
+{% block body %}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'Restorations:info' %}">Главная</a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">Каталог</li>
+    </ol>
+</nav>
+
+<div class="container mt-4">
+    <div class="row g-4 justify-content-center">
+        {% for restore in restore_list %}
+            <div class="m-2">
+                <div class="card mb-4" onclick="window.location='{% url 'Restorations:card' restore.id %}'">
+                    <img class="card-img-top" src="{{ restore.image }}"
+                         onerror="this.src='/static/Restorations/src/card_img_placeholder.jpg'">
+                    <div class="card-body ">
+                        <h5 class="card-title ">{{ restore.name }}</h5>
+                        <p class="card-text small mb-2">{{restore.description}}</p>
+                        <p class="card-text text-center">
+                            {{ restore.given_sum|display_int }} /
+                            {{ restore.total_sum|display_int }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
