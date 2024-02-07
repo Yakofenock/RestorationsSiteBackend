@@ -1,0 +1,130 @@
+ .card:hover {
+  transition: transform 0.3s ease-out;
+  transform: scale(1.05);
+}
+
+
+ .navbar-toggler {
+    color: #fff;
+    background-color: #fff; /* Фон кнопки также делаем белым */
+    border-color: #fff; /* Цвет рамки также делаем белым */
+  }
+
+.nav-link {
+    color: white !important;
+}
+
+.table td,
+.table th {
+    vertical-align: middle !important;
+}
+
+.nav-link:hover {
+    color: #ffc0cb; !important /* Изменение цвета при наведении */
+ }
+
+.breadcrumb {
+    adding: .45rem 1rem;
+    background-color: #e6e6e6 !important;
+}
+
+.logo {
+    max-height: 70px;
+}
+
+.site-title {
+    color: white;
+    font-weight: bold;
+    word-wrap: break-word;
+}
+
+.search:focus {
+    color: black !important;
+    outline: black !important;
+}
+
+.navbar-toggler {
+    background-color: white;
+}
+
+.container {
+    max-width: 100%
+}
+
+ .card {
+        max-width: 300px;
+        width: 100%;
+    }
+
+.main-color {
+    background-color: #7749F8 !important;
+}
+
+@media (max-width: 576px) {
+    .navbar-brand {
+        white-space: break-spaces !important;
+        flex-direction: column !important;
+        margin-right: 0 !important;
+  }
+  .navbar-toggler {
+    margin-left: 0 !important;
+  }
+}
+
+/*Чтобы навигационная панель не урезалась*/
+@media (max-width: 1075px) {
+   .navbar-expand-lg .navbar-collapse  {
+        display: none !important;
+   }
+   .navbar-expand-lg .navbar-toggler {
+        display: flex !important;
+   }
+}
+
+@media (max-width: 420px) {
+    .navbar {
+        flex-direction: column;
+    }
+    .search-button {
+        margin-right: 0;
+    }
+    .navbar-toggler {
+        margin-top: 12px;
+        margin-left: 0 !important;
+    }
+
+    .form-inline {
+        flex-direction: column;
+        width: 75%;
+        margin-top: 0 !important;
+    }
+    .search-button {
+        margin-top: 10px;
+        width: 100%;
+    }
+
+    .hamburger-hidden {
+        margin-top: 10px;
+        flex-direction: column;
+    }
+
+    .hamburger-first {
+         border-top-left-radius: 2px;
+         border-top-right-radius: 2px !important;
+         border-bottom-left-radius: 0px;
+    }
+
+    .hamburger-last {
+         border-top-right-radius: 0px;
+         border-bottom-left-radius: 2px !important;
+         border-bottom-right-radius: 2px;
+    }
+}
+
+.form-control:focus {
+  color: #495057;
+  background-color: #fff;
+  border-color: #fff;
+  outline: 0;
+  box-shadow: 0 0 0 .2rem rgba(255, 255, 255, 0.25);
+}

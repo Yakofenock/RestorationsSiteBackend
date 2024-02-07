@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="{% static 'Restorations/css/css.css'%}"/>
+    <title>Restorations</title>
+
+
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light navbar-sm justify-content-center
+            justify-content-sm-start main-color">
+    <div class="navbar-brand d-flex flex-wrap flex-sm-nowrap text-center align-items-center" href="#">
+        <img class="logo" src="/static/Restorations/src/site_logo.png" alt="Site Logo">
+        <span class="site-title">Donations for Restorations</span>
+    </div>
+
+    <!-- Поиск -->
+    <form method="post" class="form-inline flex-nowrap">
+        {% csrf_token %}
+        <input class="form-control search " type="search" value="{{search_text}}" placeholder="Search..." name="search">
+        <button class="btn btn-outline-light search-button ml-2 mr-2" type="submit">Search</button>
+    </form>
+
+    <!-- Hamburger Menu -->
+    <button type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            class="navbar-toggler ml-auto btn-light">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    </button>
+   <div id="navbarSupportedContent" class="navbar-collapse text-right collapse">
+        <div class="btn-group ml-auto hamburger-hidden">
+            <a class="btn btn-outline-light hamburger-first"
+               href="{% url 'Restorations:info'%}">Главная</a>
+            <a class="btn btn-outline-light"
+               href="{% url 'Restorations:catalog'%}">Каталог</a>
+            <div class="btn-group">
+                <button type="button" data-toggle="dropdown"
+                        class="btn btn-light dropdown-toggle hamburger-last">Профиль</button>
+                <div class="dropdown-menu">
+                    <button class="dropdown-item">Корзина</button>
+                    <button class="dropdown-item">Заказы</button>
+                    <button class="dropdown-item" href="#">Выход</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</nav>
+
+<!--        <form method="post">-->
+<!--            {% csrf_token %}-->
+<!--            <input name="search" placeholder="Search... ">-->
+<!--            <button type="submit">search</button>-->
+<!--        </form>-->
+<!--        <div class="hamburger-menu"><img class="menu-icon" src="{% static 'Restorations/src/hamburger_menu.svg' %}"/></div>-->
+<!--    </div>-->
+    <div class="content">
+        {% block body %} {% endblock %}
+    </div>
+</div>
+
+
+</body>
+</html>
