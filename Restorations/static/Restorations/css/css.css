@@ -71,16 +71,6 @@
   }
 }
 
-/*Чтобы навигационная панель не урезалась*/
-@media (max-width: 1075px) {
-   .navbar-expand-lg .navbar-collapse  {
-        display: none !important;
-   }
-   .navbar-expand-lg .navbar-toggler {
-        display: flex !important;
-   }
-}
-
 @media (max-width: 420px) {
     .navbar {
         flex-direction: column;

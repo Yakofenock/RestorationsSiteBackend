@@ -44,5 +44,6 @@ class PaymentView(admin.ModelAdmin):
     def sum(self, obj):
         return obj.donation_set.aggregate(Sum('sum'))['sum__sum'] or 0
 
+
 admin.site.register(Restoration, RestorationView)
 admin.site.register(Payment, PaymentView)

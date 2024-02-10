@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from Restorations.validators import *
+from Restorations.utils import RESTORATION_STATUSES, WORK_STATUSES, PAYMENT_STATUSES
 
 from django.dispatch import receiver
 from django.db.models.signals import post_save
@@ -16,9 +17,10 @@ class Restoration(models.Model):
     status = models.CharField(
         max_length=9, blank=True,
         validators=[restoration_status_validate],
-        default=list(RESTORATION_STATUSES.keys())[0],
-        choices=[(key, value) for key, value in RESTORATION_STATUSES.items()]
+        default=RESTORATION_STATUSES[0],
+        choices=[(key, value) for key, value in restoration_statuses.items()]
     )
+    banck_account = models.CharField(max_length=12)
 
     class Meta:
         managed = True
@@ -36,8 +38,8 @@ class Work(models.Model):
     status = models.CharField(
         max_length=10, blank=True,
         validators=[work_status_validate],
-        default=list(WORK_STATUSES.keys())[0],
-        choices=[(key, value) for key, value in WORK_STATUSES.items()]
+        default=WORK_STATUSES[0],
+        choices=[(key, value) for key, value in work_statuses.items()]
     )
 
     class Meta:
@@ -57,9 +59,9 @@ class Payment(models.Model):
     status = models.CharField(
         max_length=9,
         blank=True,
-        default=list(PAYMENT_STATUSES.keys())[0],
+        default=PAYMENT_STATUSES[0],
         validators=[payment_status_validate],
-        choices=[(key, value) for key, value in PAYMENT_STATUSES.items()]
+        choices=[(key, value) for key, value in payments_statuses.items()]
     )
     date_open = models.DateField(auto_now=True)
     date_pay = models.DateField(blank=True, null=True)
@@ -86,18 +88,22 @@ class Donation(models.Model):
 @receiver(post_save, sender=Payment)
 def save_payment(sender, instance, *args, **kwargs):  # Could be made inside by usual create
     id = instance.id
-    payment_statuses = list(PAYMENT_STATUSES.keys())
     payment = Payment.objects.filter(id=id)
 
     # Setting date_close and date_pay after status fixing:
     date_close = now().date() \
-        if instance.status in (payment_statuses[-1], payment_statuses[-2]) \
+        if instance.status == PAYMENT_STATUSES[-2]  \
         else None
-    date_pay = now().date() if instance.status == 'paid' else None
+    date_pay = now().date() if instance.status == PAYMENT_STATUSES[1] else None
 
-    instance.date_close = date_close
-    instance.date_pay = date_pay
-    payment.update(date_pay=date_pay, date_close=date_close)
+    # Done like that to prevent recursion:
+    if not payment.first().date_pay and date_pay:
+        instance.date_pay = date_pay
+        payment.update(date_pay=date_pay)
+
+    if not payment.first().date_close and date_close:
+        instance.date_close = date_close
+        payment.update(date_close=date_close)
 
     # Setting payment code:
     if not instance.code:
