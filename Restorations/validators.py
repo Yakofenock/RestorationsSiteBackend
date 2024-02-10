@@ -5,7 +5,8 @@ payments_statuses = {'Opened': 'Формируется',
                     'Paid': 'Оплачена',
                     'Rejected': 'Отклонена',
                     'Completed': 'Принята',
-                    'Deleted': 'Удалена'}
+                    'Deleted': 'Удалена',
+                    }
 
 
 def payment_status_validate(value):
@@ -13,7 +14,7 @@ def payment_status_validate(value):
         raise ValidationError(f'Status shoulde be one of {payments_statuses.keys()}')
 
 
-restoration_statuses = {'InProcess': 'В процессе', 'Completed': 'Завершена'}
+restoration_statuses = {'Forming': 'Формируется', 'InProcess': 'В процессе', 'Completed': 'Завершена'}
 
 
 def restoration_status_validate(value):

@@ -14,5 +14,6 @@ urlpatterns = [
     path('', include(router.urls)),
     path('manage_payment_status/',                PaymentStatusUserView.as_view()),
     path('manage_payment_status_admin/<int:pk>/', PaymentStatusAdminView.as_view()),
-    path('manage_payment_donation/',              PaymentDonationView.as_view())
+    path('manage_payment_donation/',              PaymentDonationView.as_view()),
+    path('asinc_pay_service/',                    AsincServiceMount.as_view())
 ]
