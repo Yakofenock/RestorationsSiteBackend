@@ -20,16 +20,16 @@ con.set_isolation_level(0)
 
 
 cur = con.cursor()
-cur.execute('SELECT * FROM "Payments"')
-results = cur.fetchall()
-print('Payments:')
-[print(paiment) for paiment in results]
-print()
-
-cur.execute('SELECT * FROM "Restorations"')
-results = cur.fetchall()
-print('Restorations:')
-[print(soft) for soft in results]
+# cur.execute('SELECT * FROM "Payments"')
+# results = cur.fetchall()
+# print('Payments:')
+# [print(paiment) for paiment in results]
+# print()
+#
+# cur.execute('SELECT * FROM "Restorations"')
+# results = cur.fetchall()
+# print('Restorations:')
+# [print(soft) for soft in results]
 
 
 def get_work_data(work, deep=False):
@@ -53,10 +53,17 @@ def get_work_data(work, deep=False):
 def get_restoration_data(restoration, deep=False):
     if not restoration and deep:
         raise Http404()
-    works_data, given_sum, total_sum = zip(*[get_work_data(work, deep=deep) for work in restoration.work_set.all()])
+
+    works = restoration.work_set.all()
+
+    # To handle case of empty works restoration:
+    works_data, given_sum, total_sum = \
+        zip(*[get_work_data(work, deep=deep) for work in works]) \
+            if works else ([], [0], [0])
+
     given_sum = sum(given_sum)
     total_sum = sum(total_sum)
-    print(restoration.image.url)
+
     restoration_data = {
         'id': restoration.id,
         'name': restoration.name,
@@ -104,7 +111,6 @@ def info(request: HttpRequest):
 
 
 def catalog(request: HttpRequest):
-
     # Processing deleting:
     restore_id = request.POST.get('delete')
     if restore_id:
@@ -132,7 +138,6 @@ def restoration(request: HttpRequest, restore_id):
     search = request.POST.get('search')
     restoration = get_restoration_data(Restoration.objects.filter(id=restore_id).first(), deep=True)
     donaters = get_donaters_data(restore_id)
-    print(donaters)
     return render(request, 'Restorations/card.html', {'restoration': restoration,
                                                       'donors':  donaters,
                                                       'search_text': search if search else ''})

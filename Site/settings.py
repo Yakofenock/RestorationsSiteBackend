@@ -5,15 +5,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 CONFIG = ConfigParser()
 CONFIG.read(BASE_DIR / 'config.cfg')
 
+LOGS_DIR = BASE_DIR / 'logs'
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
-LOGS_DIR = BASE_DIR / 'logs'
 INFO_LOG = LOGS_DIR / 'info.log'
 ERR_LOG = LOGS_DIR / 'errors.log'
 INFO_LOG.touch(), ERR_LOG.touch()
 
 SECRET_KEY = CONFIG.get('Django', 'secret_key')
 ALLOWED_HOSTS = ['127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000']
 DEBUG = True
 
 MONEY_SYMBOL = '₽'
@@ -36,11 +37,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'Restorations',
-
+    'Profiles'
 ]
 
 # Minio settings:
-STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATICFILES_STORAGE = 'Site.boto_fixer.JSFixedS3Boto3Storage'
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 AWS_S3_ENDPOINT_URL = str(CONFIG.get('Minio', 'url'))
@@ -50,6 +51,18 @@ AWS_STORAGE_BUCKET_NAME = CONFIG.get('Minio', 'bucket_name')
 AWS_QUERYSTRING_AUTH = False
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": CONFIG.get('Redis', 'url'),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
 
 DATABASES = {
     'default': {

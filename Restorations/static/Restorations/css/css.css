@@ -3,7 +3,6 @@
   transform: scale(1.05);
 }
 
-
  .navbar-toggler {
     color: #fff;
     background-color: #fff; /* Фон кнопки также делаем белым */
@@ -69,16 +68,6 @@
   .navbar-toggler {
     margin-left: 0 !important;
   }
-}
-
-/*Чтобы навигационная панель не урезалась*/
-@media (max-width: 1075px) {
-   .navbar-expand-lg .navbar-collapse  {
-        display: none !important;
-   }
-   .navbar-expand-lg .navbar-toggler {
-        display: flex !important;
-   }
 }
 
 @media (max-width: 420px) {

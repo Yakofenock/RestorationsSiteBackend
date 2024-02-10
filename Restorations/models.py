@@ -20,6 +20,7 @@ class Restoration(models.Model):
         default=RESTORATION_STATUSES[0],
         choices=[(key, value) for key, value in restoration_statuses.items()]
     )
+    banck_account = models.CharField(max_length=12)
 
     class Meta:
         managed = True
@@ -87,18 +88,22 @@ class Donation(models.Model):
 @receiver(post_save, sender=Payment)
 def save_payment(sender, instance, *args, **kwargs):  # Could be made inside by usual create
     id = instance.id
-    payment_statuses_k = list(payments_statuses.keys())
     payment = Payment.objects.filter(id=id)
 
     # Setting date_close and date_pay after status fixing:
     date_close = now().date() \
-        if instance.status in (payment_statuses_k[-2], payment_statuses_k[-3]) \
+        if instance.status == PAYMENT_STATUSES[-2]  \
         else None
-    date_pay = now().date() if instance.status == 'Paid' else None
+    date_pay = now().date() if instance.status == PAYMENT_STATUSES[1] else None
 
-    instance.date_close = date_close
-    instance.date_pay = date_pay
-    payment.update(date_pay=date_pay, date_close=date_close)
+    # Done like that to prevent recursion:
+    if not payment.first().date_pay and date_pay:
+        instance.date_pay = date_pay
+        payment.update(date_pay=date_pay)
+
+    if not payment.first().date_close and date_close:
+        instance.date_close = date_close
+        payment.update(date_close=date_close)
 
     # Setting payment code:
     if not instance.code:

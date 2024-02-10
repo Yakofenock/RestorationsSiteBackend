@@ -6,12 +6,12 @@ from rest_framework.response import Response
 from Restorations.models import Restoration, Work, Payment, Donation
 from django.db.models import Q, Sum
 
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from .permissions import IsAdmin, IsManager, IsUser
 from .serialisers import RestorationSerialiser, PaymentSerializer, WorkSerialiser
 from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound, MethodNotAllowed
 from Restorations.utils import RESTORATION_STATUSES, WORK_STATUSES, PAYMENT_STATUSES
 from datetime import datetime
-
-from ..user_singleton import UserSingleton
 
 
 def add_count_option(instance, request: Request):
@@ -28,7 +28,7 @@ def get_model_obj(model, pk, force_empty=False):
 
 
 def get_draft(request):
-    return Payment.objects.filter(user=UserSingleton(),
+    return Payment.objects.filter(user=request.user.id,
                                   status=PAYMENT_STATUSES[0]).first()
 
 
@@ -37,23 +37,54 @@ class RestorationViewSet(ModelViewSet):
     queryset = Restoration.objects.none()
     http_method_names = ['get', 'post', 'delete', 'put']
 
+    def get_permissions(self):
+        match self.action:
+            case 'list' | 'retrieve':
+                permission_classes = [IsAuthenticatedOrReadOnly]
+            case _:
+                permission_classes = [IsManager | IsAdmin]
+        return [permission() for permission in permission_classes]
+
     def get_queryset(self):
-        soft = Restoration.objects.all().filter(status=RESTORATION_STATUSES[0])
+        restorations = Restoration.objects.all()
+
+        user = self.request.user # Дефолтный юзер имеет права администратора
+        if not user.is_superuser and not user.is_staff:
+            restorations = restorations.filter(status=RESTORATION_STATUSES[1])
+
+        filter = self.request.GET.get('filter')
+        match filter:
+            case "Forming":
+                restorations = restorations.filter(status=RESTORATION_STATUSES[0])
+            case "InProcess":
+                restorations = restorations.filter(status=RESTORATION_STATUSES[1])
+            case "Completed":
+                restorations = restorations.filter(status=RESTORATION_STATUSES[-1])
+            case _:
+                ...
 
         # Processing search:
         search = self.request.GET.get('search')
         if search:
-            soft = soft.filter(
+            restorations = restorations.filter(
                 Q(name__icontains=search) | Q(description__icontains=search) |
                 Q(work__name__icontains=search)
             ).distinct()  # Last query can put few same result
 
-        return soft
+        return restorations
 
     def list(self, request: Request, *args, **kwargs):
         result = add_count_option(self, request)
         if result:
             return result
+
+        work_id = request.GET.get('work_id')
+        if work_id:
+            work = Work.objects.filter(pk=work_id).first()
+            if not work:
+                raise NotFound({'detail': 'there is not such work'})
+            return Response(self.serializer_class(work.restore, many=False,
+                                                  context={'specific': request}).data)
 
         draft = get_draft(request)
         data = self.serializer_class(self.get_queryset(), many=True,
@@ -83,6 +114,9 @@ class WorkViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         raise MethodNotAllowed(method='GET')
 
+    def destroy(self, request, *args, **kwargs):
+        raise MethodNotAllowed(method='DELETE')
+
 
 def validate_date(date: str, field: str):
     try:
@@ -98,12 +132,22 @@ class PaymentViewSet(ModelViewSet):
 
     http_method_names = ['get', 'delete']
 
+    def get_permissions(self):
+        permission_classes = []
+        match self.action:
+            # Viewing of all list is protected from user:
+            case 'list' | 'retrieve':
+                permission_classes = [IsUser | IsManager | IsAdmin]
+            case 'destroy':
+                permission_classes = [IsUser]
+        return [permission() for permission in permission_classes]
+
     def get_queryset(self):
         payments = Payment.objects.all().exclude(status__in=[PAYMENT_STATUSES[0],
                                                              PAYMENT_STATUSES[-1]])
 
         # Viewing of all list protection from user:
-        user = UserSingleton()
+        user = self.request.user
         if not user.is_superuser and not user.is_staff:
             payments = payments.filter(user=user.id)
 
@@ -136,7 +180,7 @@ class PaymentViewSet(ModelViewSet):
         # Ability to check summ of all payments matching query:
         if request.GET.get('sum') == 'true':
             return Response({
-                'today_requested': #??
+                'today_requested':
                     self.get_queryset().aggregate(summ_req=Sum('work__donation__sum'))['summ_req']
             })
 
@@ -147,7 +191,7 @@ class PaymentViewSet(ModelViewSet):
         if payment.status == PAYMENT_STATUSES[-1]:
             raise NotFound({'detail': 'payment not found'})
 
-        if payment.user != UserSingleton():
+        if payment.user != request.user and not (request.user.is_staff or request.user.is_admin):
             raise PermissionDenied()
 
         return Response(self.get_serializer(payment).data)
@@ -156,7 +200,7 @@ class PaymentViewSet(ModelViewSet):
         payment = get_model_obj(Payment, kwargs.get('pk'))  # Same
 
         # Not to allow to user to delete other users payments:
-        if payment.user != UserSingleton():
+        if payment.user != request.user:
             raise PermissionDenied()
 
         if payment.status == PAYMENT_STATUSES[-1]:
@@ -169,6 +213,7 @@ class PaymentViewSet(ModelViewSet):
 
 # Manging status of payment for admin:
 class PaymentStatusAdminView(APIView):
+    permission_classes = [IsManager | IsAdmin]
 
     def put(self, request, *args, **kwargs):
         payment = get_model_obj(Payment, kwargs.get('pk'))
@@ -176,14 +221,14 @@ class PaymentStatusAdminView(APIView):
         if payment.status == PAYMENT_STATUSES[-1]:
             raise NotFound({'detail': 'there is no such payment'})
 
-        if payment.status != PAYMENT_STATUSES[1]:
+        if payment.status not in [PAYMENT_STATUSES[1], PAYMENT_STATUSES[2]]:
             raise PermissionDenied({'detail': 'you cant change status now'})
 
         status = request.data.get('status')
         if status not in [PAYMENT_STATUSES[-3], PAYMENT_STATUSES[-2]]:
             raise PermissionDenied({'detail': 'wrong status specified'})
 
-        payment.manager = UserSingleton()
+        payment.manager = request.user
         payment.status = status
         payment.save()
 
@@ -192,6 +237,7 @@ class PaymentStatusAdminView(APIView):
 
 # Manging status of payment for user:
 class PaymentStatusUserView(APIView):
+    permission_classes = [IsUser]
 
     def put(self, request, *args, **kwargs):
         payment = get_draft(request)
@@ -203,27 +249,50 @@ class PaymentStatusUserView(APIView):
         return Response(PaymentSerializer(payment).data)
 
 
-# Soft inside draft managing:
+# Donation inside draft managing:
 class PaymentDonationView(APIView):
+    permission_classes = [IsUser]
+
+    def _sum_without_overflow(self, obj: Work, sum):
+        def count_sum(given, already_given, total):
+            remaining_total = total - already_given
+            sum = remaining_total if given > remaining_total else given
+            if not sum:
+                raise ValidationError({'detail': 'This work already got enough donations..'})
+            return sum
+
+        already_given = obj.donation_set.exclude(
+            payment__status=PAYMENT_STATUSES[-1], payment__date_close=None
+        ).aggregate(sum=Sum('sum'))['sum'] or 0
+        total = obj.sum
+        return count_sum(sum, already_given, total)
+
     def put(self, request, *args, **kwargs):
         payment = get_draft(request)
-        work = get_model_obj(Work, request.data.get('work'))
+        work = get_model_obj(Work, request.data.get('work_id'))
 
         sum = request.data.get('sum')
-        if not sum:
+        if not sum or sum < 0:
             raise ValidationError({'detail': 'sum field is incorrect or not applied'})
 
         # Creating draft if needed:
         if not payment:
-            payment = Payment.objects.create(user=UserSingleton())
+            payment = Payment.objects.create(user=request.user)
 
-        # Adding soft if not already added:
-        existing_work = payment.donation_set.filter(work=work).first()
-        if not existing_work:
+        # Guard checks:
+        if work.status == WORK_STATUSES[-1] or \
+                work.restore.status in [RESTORATION_STATUSES[0], RESTORATION_STATUSES[-1]]:
+            raise PermissionDenied({'detail': 'this work or restoration status doesnt allow to donate money'})
+
+        # Adding donation to this work if not already added:
+        existing_donation = payment.donation_set.filter(work=work).first()
+        if not existing_donation:
+            sum = self._sum_without_overflow(work, sum)
             payment.donation_set.create(work=work, sum=sum)
         else:
-            existing_work.sum = sum
-            existing_work.save()
+            sum = self._sum_without_overflow(existing_donation.work, sum)
+            existing_donation.sum = sum
+            existing_donation.save()
 
         return Response(PaymentSerializer(payment, context={'request': request}).data)
 
@@ -232,8 +301,10 @@ class PaymentDonationView(APIView):
         if not payment:
             raise NotFound({'detail': 'draft not found'})
 
-        work = get_model_obj(Work, request.data.get('work'), force_empty=True)
+        work = get_model_obj(Work, request.data.get('work_id'), force_empty=True)
         if work:
-            payment.donation_set.filter(work=work.id).first().delete()
+            donation = payment.donation_set.filter(work=work.id).first()
+            if donation:
+                donation.delete()
 
         return Response(PaymentSerializer(payment, context={'request': request}).data)
