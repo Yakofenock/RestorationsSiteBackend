@@ -1,29 +1,29 @@
 from django.core.validators import ValidationError
 
 
-PAYMENT_STATUSES = {'Opened': 'Формируется',
+payments_statuses = {'Opened': 'Формируется',
                     'Paid': 'Оплачена',
-                    'Deleted': 'Удалена',
                     'Rejected': 'Отклонена',
-                    'Completed': 'Принята'}
+                    'Completed': 'Принята',
+                    'Deleted': 'Удалена'}
 
 
 def payment_status_validate(value):
-    if value not in PAYMENT_STATUSES.keys():
-        raise ValidationError(f'Status shoulde be one of {PAYMENT_STATUSES.keys()}')
+    if value not in payments_statuses.keys():
+        raise ValidationError(f'Status shoulde be one of {payments_statuses.keys()}')
 
 
-RESTORATION_STATUSES = {'InProcess': 'В процессе', 'Completed': 'Завершена'}
+restoration_statuses = {'InProcess': 'В процессе', 'Completed': 'Завершена'}
 
 
 def restoration_status_validate(value):
-    if value not in RESTORATION_STATUSES.keys():
-        raise ValidationError(f'Restoration status should be one of {RESTORATION_STATUSES.keys()}')
+    if value not in restoration_statuses.keys():
+        raise ValidationError(f'Restoration status should be one of {restoration_statuses.keys()}')
 
 
-WORK_STATUSES = {'NotStarted': 'Не начата', 'InProcess': 'В процессе', 'Completed': 'Завершена'}
+work_statuses = {'NotStarted': 'Не начата', 'InProcess': 'В процессе', 'Completed': 'Завершена'}
 
 
 def work_status_validate(value):
-    if value not in WORK_STATUSES.keys():
-        raise ValidationError(f'Work status should be one of {WORK_STATUSES.keys()}')
+    if value not in work_statuses.keys():
+        raise ValidationError(f'Work status should be one of {work_statuses.keys()}')

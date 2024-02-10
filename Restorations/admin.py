@@ -7,7 +7,7 @@ from .models import Restoration, Work, Payment, Donation
 class WorkInline(admin.StackedInline):
     model = Work
     extra = 0
-    readonly_fields = ['got_sum']
+    readonly_fields = ['sum']
 
     def got_sum(self, obj):
         return obj.donation_set.aggregate(Sum('sum'))['sum__sum'] or 0
@@ -15,10 +15,10 @@ class WorkInline(admin.StackedInline):
 
 class RestorationView(admin.ModelAdmin):
     inlines = [WorkInline]
-    list_display = ['name', 'status', 'got_sum', 'total_sum']
-    readonly_fields = ['total_sum', 'got_sum']
+    list_display = ['name', 'status', 'given_sum', 'total_sum']
+    readonly_fields = ['total_sum', 'given_sum']
 
-    def got_sum(self, obj):
+    def given_sum(self, obj):
         return obj.work_set.aggregate(Sum('donation__sum'))['donation__sum__sum'] or 0
 
     def total_sum(self, obj):
@@ -43,6 +43,7 @@ class PaymentView(admin.ModelAdmin):
 
     def sum(self, obj):
         return obj.donation_set.aggregate(Sum('sum'))['sum__sum'] or 0
+
 
 admin.site.register(Restoration, RestorationView)
 admin.site.register(Payment, PaymentView)

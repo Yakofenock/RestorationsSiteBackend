@@ -2,6 +2,7 @@ from django.http import HttpRequest, Http404
 from django.shortcuts import render
 
 from Restorations.models import *
+from Restorations.utils import RESTORATION_STATUSES, short_field, count_percent
 from collections import defaultdict
 from django.db.models import Sum, Q
 
@@ -29,14 +30,6 @@ cur.execute('SELECT * FROM "Restorations"')
 results = cur.fetchall()
 print('Restorations:')
 [print(soft) for soft in results]
-
-
-def count_percent(val1, val2):
-    return round(val1/val2*100, ROUND) if val2 else 0
-
-
-def short_field(value):
-    return value[:100] + ('...' if len(value) > 34 else '')
 
 
 def get_work_data(work, deep=False):
@@ -111,16 +104,15 @@ def info(request: HttpRequest):
 
 
 def catalog(request: HttpRequest):
-    restoration_statuses = list(RESTORATION_STATUSES.keys())
 
     # Processing deleting:
     restore_id = request.POST.get('delete')
     if restore_id:
         with con.cursor() as curs:
-            curs.execute(f"UPDATE \"Restorations\" SET status='{restoration_statuses[-1]}' WHERE id = {restore_id}")
+            curs.execute(f"UPDATE \"Restorations\" SET status='{RESTORATION_STATUSES[-1]}' WHERE id = {restore_id}")
         print('Deletion done,', restore_id)
 
-    restorations_l = Restoration.objects.filter(status=restoration_statuses[0])
+    restorations_l = Restoration.objects.filter(status=RESTORATION_STATUSES[0])
 
     # Searching:
     search = request.POST.get('search')

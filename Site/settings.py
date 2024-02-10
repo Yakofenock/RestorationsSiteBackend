@@ -32,8 +32,24 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',
+    'rest_framework',
+    'drf_yasg',
     'Restorations',
+
 ]
+
+# Minio settings:
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+AWS_S3_ENDPOINT_URL = str(CONFIG.get('Minio', 'url'))
+AWS_ACCESS_KEY_ID       = CONFIG.get('Minio', 'key_id')
+AWS_SECRET_ACCESS_KEY   = CONFIG.get('Minio', 'access_key')
+AWS_STORAGE_BUCKET_NAME = CONFIG.get('Minio', 'bucket_name')
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
 
 DATABASES = {
     'default': {

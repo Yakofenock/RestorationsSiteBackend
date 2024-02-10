@@ -8,6 +8,7 @@ from Site.settings import MEDIA_URL, MEDIA_ROOT
 
 
 urlpatterns = [
+    path('api/restorations_api/v1/', include('Restorations.api_v1.urls')),
     path('restorations/', include('Restorations.urls')),
     path('admin/',        admin.site.urls),
     path('', index)
