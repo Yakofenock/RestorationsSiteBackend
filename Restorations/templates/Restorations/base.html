@@ -10,9 +10,8 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="{% static 'Restorations/css/css.css'%}"/>
     <title>Restorations</title>
-
-
 </head>
+
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-sm justify-content-center
             justify-content-sm-start main-color">
@@ -33,15 +32,16 @@
             class="navbar-toggler ml-auto btn-light">
         <span class="navbar-toggler-icon"></span>
     </button>
-   <div id="navbarSupportedContent" class="navbar-collapse text-right collapse">
+    <div id="navbarSupportedContent" class="navbar-collapse text-right collapse">
         <div class="btn-group ml-auto hamburger-hidden">
-            <a class="btn btn-outline-light hamburger-first"
-               href="{% url 'Restorations:info'%}">Главная</a>
-            <a class="btn btn-outline-light"
-               href="{% url 'Restorations:catalog'%}">Каталог</a>
+            <a class="btn btn-outline-light hamburger-first" href="{% url 'Restorations:info'%}">Главная</a>
+            <a class="btn btn-outline-light" href="{% url 'Restorations:catalog'%}">Каталог</a>
+            <a class="btn btn-outline-light text-center d-flex flex-row" href="{% url 'Restorations:basket'%}">
+                <img class="basket_pick" src="{% static 'Restorations/src/basket.svg'%}">
+                <span class="badge badge-success mt-0 mb-0 mt-2 ml-1 pb-0">{{basket_size}}</span>
+            </a>
             <div class="btn-group">
-                <button type="button" data-toggle="dropdown"
-                        class="btn btn-light dropdown-toggle hamburger-last">Профиль</button>
+                <button type="button" data-toggle="dropdown" class="btn btn-light dropdown-toggle hamburger-last">Профиль</button>
                 <div class="dropdown-menu">
                     <button class="dropdown-item">Корзина</button>
                     <button class="dropdown-item">Заказы</button>
@@ -52,11 +52,10 @@
     </div>
 </nav>
 
-
 <div class="content">
     {% block body %} {% endblock %}
 </div>
 
-
 </body>
+
 </html>

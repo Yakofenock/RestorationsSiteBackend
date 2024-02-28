@@ -1,0 +1,39 @@
+<table class="table text-center">
+    <thead>
+    <tr>
+        <th colSpan="5" class="border-left border-right">
+            <a class="small btn btn-primary w-25" href="/restorations/{{donation.restore_id}}">
+                {{donation.restore_name}}
+            </a>
+        </th>
+    </tr>
+    <tr>
+        <th class="border-left border-right">Работа</th>
+        <th class="border-right">Требуется, ₽</th>
+        <th class="border-right">Пожертвовано, ₽</th>
+        <th class="border-right">Доля, %</th>
+        <th class="border-right">Действия</th>
+    </tr>
+    </thead>
+    <tbody>
+        {% for workDonation in donation.worksDonations %}
+             <tr>
+                <td class="border-left border-right">{{workDonation.work}}</td>
+                <td class="border-right">{{workDonation.total_sum}}</td>
+                <td class="border-right">{{workDonation.given_sum}}</td>
+                <td class="border-right">{{workDonation.percent}}</td>
+                <td class="border-right">
+                    <div class="d-flex justify-content-center">
+                        <Button class="mt-2 mr-2 btn btn-success">Изменить</Button>
+                        <Button class="mt-2 ml-2 btn btn-danger">Удалить</Button>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colSpan="5" class="border-top"></td>
+    </tr>
+    </tfoot>
+</table>

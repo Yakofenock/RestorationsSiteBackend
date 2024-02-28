@@ -4,7 +4,7 @@ from django.shortcuts import render
 from Restorations.models import *
 from collections import defaultdict
 from django.db.models import Sum, Q
-
+from Restorations.validators import PAYMENT_STATUSES
 from Site.settings import ROUND, CONFIG
 from psycopg2 import connect
 
@@ -111,10 +111,55 @@ def get_donaters_data(restore_id):
     return dict(donors_data)
 
 
+# New:
+def get_deafault_user():
+    return User.objects.filter(payment__donation__isnull=False,
+                               payment__status=list(PAYMENT_STATUSES.keys())[0]).distinct().first()
+
+
+def count_basket_size():
+    user = get_deafault_user()
+    if user:
+        basket = user.payment_set.first()
+        return basket.donation_set.count()
+    else:
+        return 0
+
+
+def summarize_donations(donations):
+    summary_map = defaultdict(lambda: {'restore_id': None, 'restore_name': None, 'worksDonations': []})
+
+    if donations:
+        for donation in donations:
+            restore = donation.work.restore
+            work =  donation.work
+            restore_id = restore.pk
+
+            given_sum = donation.sum
+            total_sum = donation.work.sum
+
+            summary_map[restore_id]['restore_id'] = restore_id
+            summary_map[restore_id]['restore_name'] = restore.name
+            summary_map[restore_id]['worksDonations'].append({
+                'work_id': work.pk,
+                'work':    work.name,
+                'given_sum': given_sum,
+                'total_sum': total_sum,
+                'percent': count_percent(given_sum, total_sum)
+            })
+
+    return list(summary_map.values())
+
+def summirise_basket(payment):
+    payment.given_sum = sum(donation.sum for donation in payment.donation_set.all())
+    return payment
+
+
 # Views:
 def info(request: HttpRequest):
     search = request.POST.get('search')
-    return render(request, 'Restorations/info.html', {'search_text': search if search else ''})
+    return render(request, 'Restorations/info.html', {'search_text': search if search else '',
+                                                      'basket_size': count_basket_size()})
 
 
 def catalog(request: HttpRequest):
@@ -140,7 +185,8 @@ def catalog(request: HttpRequest):
     restoration_list = [get_restoration_data(restoration) for restoration in restorations_l]
 
     return render(request, 'Restorations/catalog.html', {'restore_list': restoration_list,
-                                                         'search_text': search if search else ''})
+                                                         'search_text': search if search else '',
+                                                         'basket_size': count_basket_size()})
 
 
 def restoration(request: HttpRequest, restore_id):
@@ -149,4 +195,14 @@ def restoration(request: HttpRequest, restore_id):
     donaters = get_donaters_data(restore_id)
     return render(request, 'Restorations/card.html', {'restoration': restoration,
                                                       'donors':  donaters,
-                                                      'search_text': search if search else ''})
+                                                      'search_text': search if search else '',
+                                                      'basket_size': count_basket_size()})
+
+
+def basket(request: HttpRequest):
+    user = get_deafault_user()
+    basket = user.payment_set.first() if user else {}
+    return render(request, 'Restorations/basket.html',
+                  {'basket': summirise_basket(basket),
+                   'donations': summarize_donations(basket.donation_set.all()),
+                   'basket_size': count_basket_size()})
