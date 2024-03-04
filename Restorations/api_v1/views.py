@@ -242,7 +242,6 @@ class PaymentStatusAdminView(APIView):
 # Manging status of payment for user:
 class PaymentStatusUserView(APIView):
     permission_classes = [IsUser]
-
     def put(self, request, *args, **kwargs):
         payment = get_draft(request)
         if not payment:

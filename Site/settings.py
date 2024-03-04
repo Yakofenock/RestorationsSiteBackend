@@ -21,6 +21,7 @@ MONEY_SYMBOL = '₽'
 ROUND = 4
 DIGITS_RU_NAMES = {1_000_000_000: 'млрд.', 1_000_000: 'млн.', 1_000: 'тыс.'}
 
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000']
 ROOT_URLCONF = 'Site.urls'
 WSGI_APPLICATION = 'Site.wsgi.application'
 STATIC_URL = 'static/'
